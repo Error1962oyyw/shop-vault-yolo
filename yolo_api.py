@@ -1,7 +1,8 @@
-from flask import Flask, request, jsonify
-from ultralytics import YOLO
 import cv2
 import numpy as np
+from flask import Flask, jsonify, request
+
+from ultralytics import YOLO
 
 app = Flask(__name__)
 
@@ -12,15 +13,15 @@ model = YOLO("yolo26x.pt")
 print("YOLO 模型加载完成！")
 
 
-@app.route('/predict', methods=['POST'])
+@app.route("/predict", methods=["POST"])
 def predict():
     # 2. 检查是否有文件上传
-    if 'file' not in request.files:
-        return jsonify({'code': 400, 'message': '没有找到文件', 'labels': []}), 400
+    if "file" not in request.files:
+        return jsonify({"code": 400, "message": "没有找到文件", "labels": []}), 400
 
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({'code': 400, 'message': '未选择文件', 'labels': []}), 400
+    file = request.files["file"]
+    if file.filename == "":
+        return jsonify({"code": 400, "message": "未选择文件", "labels": []}), 400
 
     try:
         # 3. 读取上传的图片文件进内存（不保存到硬盘，速度更快）
@@ -45,17 +46,13 @@ def predict():
         unique_classes = list(set(detected_classes))
 
         # 7. 返回 JSON 给你的 Java 后端
-        return jsonify({
-            'code': 200,
-            'message': '识别成功',
-            'labels': unique_classes
-        })
+        return jsonify({"code": 200, "message": "识别成功", "labels": unique_classes})
 
     except Exception as e:
         print(f"识别发生错误: {e}")
-        return jsonify({'code': 500, 'message': f'服务器内部错误: {str(e)}', 'labels': []}), 500
+        return jsonify({"code": 500, "message": f"服务器内部错误: {e!s}", "labels": []}), 500
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # 启动服务，运行在 5000 端口
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
