@@ -1,8 +1,8 @@
-from flask import Flask, request, jsonify
-from ultralytics import YOLO
-from PIL import Image
 import pillow_heif
-import io
+from flask import Flask, jsonify, request
+from PIL import Image
+
+from ultralytics import YOLO
 
 app = Flask(__name__)
 
@@ -15,27 +15,27 @@ model = YOLO("yolo26x.pt")
 print("YOLO 模型加载完成！")
 
 
-@app.route('/predict', methods=['POST'])
+@app.route("/predict", methods=["POST"])
 def predict():
     # 检查是否有文件上传
-    if 'file' not in request.files:
-        return jsonify({'code': 400, 'message': '没有找到文件', 'labels': []}), 400
+    if "file" not in request.files:
+        return jsonify({"code": 400, "message": "没有找到文件", "labels": []}), 400
 
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({'code': 400, 'message': '未选择文件', 'labels': []}), 400
+    file = request.files["file"]
+    if file.filename == "":
+        return jsonify({"code": 400, "message": "未选择文件", "labels": []}), 400
 
     try:
         # 3. 使用 PIL 直接读取上传的文件流 (此时 HEIC 会被自动解析)
         try:
             image = Image.open(file.stream)
-        except Exception as e:
+        except Exception:
             # 如果解析失败（例如传了 txt 文件），直接拦截！
-            return jsonify({'code': 400, 'message': '不支持的文件格式或图片已损坏', 'labels': []}), 400
+            return jsonify({"code": 400, "message": "不支持的文件格式或图片已损坏", "labels": []}), 400
 
         # 4. 核心转换：将图片强制转换为 RGB 模式
         # 这一步相当于把它变成了标准的 .jpg 格式，剔除了 HEIC 特有的通道或透明度
-        image = image.convert('RGB')
+        image = image.convert("RGB")
 
         # (可选) 如果你想在本地保存转换后的 jpg 看看效果，可以取消下面这行的注释：
         # image.save("converted_test.jpg", "JPEG")
@@ -53,16 +53,12 @@ def predict():
 
         # 7. 去重并返回
         unique_classes = list(set(detected_classes))
-        return jsonify({
-            'code': 200,
-            'message': '识别成功',
-            'labels': unique_classes
-        })
+        return jsonify({"code": 200, "message": "识别成功", "labels": unique_classes})
 
     except Exception as e:
         print(f"识别发生错误: {e}")
-        return jsonify({'code': 500, 'message': f'服务器内部处理错误: {str(e)}', 'labels': []}), 500
+        return jsonify({"code": 500, "message": f"服务器内部处理错误: {e!s}", "labels": []}), 500
 
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)

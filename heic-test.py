@@ -1,10 +1,12 @@
 import os
 import tempfile
-from PIL import Image
+
 import cv2
 import numpy as np
-from ultralytics import YOLO
+from PIL import Image
 from pillow_heif import register_heif_opener  # 确保导入注册函数
+
+from ultralytics import YOLO
 
 # 注册 HEIF 插件（这是关键步骤！）
 register_heif_opener()
@@ -18,7 +20,7 @@ temp_dir = tempfile.mkdtemp()
 try:
     # 处理所有HEIC文件（内存转换，不保存磁盘文件）
     for filename in os.listdir(source_dir):
-        if filename.lower().endswith('.heic'):
+        if filename.lower().endswith(".heic"):
             heic_path = os.path.join(source_dir, filename)
 
             # 内存中转换HEIC -> RGB数组
@@ -28,17 +30,17 @@ try:
                 img_array = np.array(rgb_img)[:, :, ::-1]  # RGB->BGR
 
             # 保存到临时目录（仅用于YOLO输入，后续会删除）
-            jpg_path = os.path.join(temp_dir, filename.replace('.heic', '.jpg'))
+            jpg_path = os.path.join(temp_dir, filename.replace(".heic", ".jpg"))
             cv2.imwrite(jpg_path, img_array)
 
     # 处理非HEIC文件（直接复制到临时目录）
     for filename in os.listdir(source_dir):
-        if not filename.lower().endswith('.heic'):
+        if not filename.lower().endswith(".heic"):
             src_path = os.path.join(source_dir, filename)
             dst_path = os.path.join(temp_dir, filename)
             # 仅复制非HEIC文件（JPG/PNG等）
             if os.path.isfile(src_path):
-                with open(src_path, 'rb') as f_src, open(dst_path, 'wb') as f_dst:
+                with open(src_path, "rb") as f_src, open(dst_path, "wb") as f_dst:
                     f_dst.write(f_src.read())
 
     # 执行预测（使用临时目录）
@@ -50,7 +52,7 @@ try:
         project="results_heic",
     )
 
-    print(f"Processing complete. Results saved to: results_heic")
+    print("Processing complete. Results saved to: results_heic")
 
 finally:
     # 清理临时目录（无论是否成功都会删除）
