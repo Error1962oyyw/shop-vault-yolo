@@ -2,7 +2,6 @@ from flask import Flask, request, jsonify
 from ultralytics import YOLO
 from PIL import Image
 import pillow_heif
-import io
 
 app = Flask(__name__)
 
